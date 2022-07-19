@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all">
+    <script src="/resources/echarts.js"></script>
+    <script src="/resources/layui/layui.js"></script>
+    <script src="/resources/jquery-3.6.0.js"></script>
+    <script src="/resources/sweetalert2.all.min.js"></script>
+    <style>
+        #piect,#radarct{
+            margin: 0 auto;
+            width: 80%;
+            height: 500px;
+        }
+    </style>
+    <title>实验一</title>
+</head>
+<body>
+    <div id="ipt">
+        <div style="margin-bottom: 40px">
+            <button id="file-upload" class="layui-btn" lay-data="{url: '/fileUpload', accept: 'file'} ">上传文件</button>
+            <input type="text" id="upmsg" value="" style=" border: 0px; margin-left: 30px; margin-bottom: 40px; font-size: 18px" readonly="readonly">
+        </div>
+        <!--类型下拉框-->
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">色泽</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="color" lay-verify="required" lay-filter="color">
+                        <option value="青绿" selected = "selected">--请选择(默认青绿)--</option>
+                        <option value="青绿">青绿</option>
+                        <option value="乌黑">乌黑</option>
+                        <option value="浅白">浅白</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">根蒂</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="burgundy" lay-verify="required" lay-filter="burgundy">
+                        <option value="稍蜷" selected = "selected">--请选择(默认稍蜷)--</option>
+                        <option value="蜷缩">蜷缩</option>
+                        <option value="稍蜷">稍蜷</option>
+                        <option value="硬挺">硬挺</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">敲声</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="voice" lay-verify="required" lay-filter="voice">
+                        <option value="浊响" selected = "selected">--请选择(默认浊响)--</option>
+                        <option value="浊响">浊响</option>
+                        <option value="沉闷">沉闷</option>
+                        <option value="清脆">清脆</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">纹理</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="figure" lay-verify="required" lay-filter="figure">
+                        <option value="清晰" selected = "selected">--请选择(默认清晰)--</option>
+                        <option value="清晰">清晰</option>
+                        <option value="稍糊">稍糊</option>
+                        <option value="模糊">模糊</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">脐部</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="belly" lay-verify="required" lay-filter="belly">
+                        <option value="凹陷" selected = "selected">--请选择(默认凹陷)--</option>
+                        <option value="凹陷">凹陷</option>
+                        <option value="稍凹">稍凹</option>
+                        <option value="平坦">平坦</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">触感</label>
+                <div class="layui-input-block layui-col-space5">
+                    <select name="touch" lay-verify="required" lay-filter="touch">
+                        <option value="硬滑" selected = "selected">--请选择(默认硬滑)--</option>
+                        <option value="硬滑">硬滑</option>
+                        <option value="软粘">软粘</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block layui-col-space5">
+                    <input type="hidden" name="expid" lay-verify="required" lay-filter="expid" value="exp1">
+                </div>
+            </div>
+            <!--提交按钮-->
+            <div class="layui-form-item " style="text-align: center">
+                <button class="layui-btn" type="button" lay-submit lay-filter="sub">立即判断</button>
+            </div>
+        </form>
+    </div>
+    <div id="piect">
+    </div>
+    <div id="radarct">
+    </div>
+    <div id="result" style="margin: 0 auto;width: 80%;text-align:center;">
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    function pieEchart(pietitle, subtitle, attrname, piedata) {
+        var chartDom = document.getElementById('piect');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        option = {
+            title: {
+                text: pietitle,
+                subtext: subtitle,
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left'
+            },
+            series: [
+                {
+                    name: attrname,
+                    type: 'pie',
+                    radius: '50%',
+                    data: piedata,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+        option && myChart.setOption(option);
+    }
+
+    function radarEchart(radatitle, legendlist, indicatorList, seriesDesc, datamap) {
+        var chartDom = document.getElementById('radarct');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        option = {
+            title: {
+                text: radatitle
+            },
+            legend: {
+                data: legendlist
+            },
+            radar: {
+                // shape: 'circle',
+                indicator: indicatorList
+            },
+            series: [
+                {
+                    name: seriesDesc,
+                    type: 'radar',
+                    data: [
+                        {
+                            value: datamap.good_melon,
+                            name: legendlist[0]
+                        },
+                        {
+                            value: datamap.bad_melon,
+                            name: legendlist[1]
+                        }
+                    ]
+                }
+            ]
+        };
+        option && myChart.setOption(option);
+    }
+
+    function fileUpload() {
+        layui.use('upload', function(){
+            var upload = layui.upload;
+            //执行实例
+            upload.render({
+                elem: '#file-upload',
+                url: '/fileUpload', //必填项
+                method: 'post',  //可选项。HTTP类型，默认post
+                data: {}, //可选项。额外的参数，如：{id: 123, abc: 'xxx'} // TODO 参数传递过去接收不到???
+                done: function(res){
+                    //上传完毕回调
+                    if (res.code == 0) {
+                        $("#upmsg").val("上传成功!")
+                        console.log(typeof(res.code))
+                    }
+
+                },
+                error: function(){
+                    //请求异常回调
+                }
+            });
+        });
+    }
+
+    function submitData() {
+        var layForm = layui.form; //layui表单对象
+        var $ = layui.$; //jQuery对象
+
+        //表单提交事件
+        layForm.on('submit(sub)', function(data){
+            console.info("向服务器提交的表单数据",data.field);
+            $.get("/ExpServlet",data.field,function (json) {
+                console.info(json);
+                if(json.code == 0){
+                    /*SweetAlert2确定对话框*/
+                    $("#ipt").css("display", "none")
+                    swal({
+                        type: 'success',
+                        html: "<h2>提交成功</h2>",
+                        confirmButtonText: "确定"
+                    }).then(function () {
+                    });
+                    console.log(json)
+                    json=json.data
+                    pieEchart(json.pieTitle, json.subtitle, json.attrname, json.piedata)
+                    radarEchart(json.radarTitle, json.legendDataList, json.indicatorList, json.seriesDesc, json.dataMap)
+                    console.log("\n" + json.goodP + "\t" + json.badP);
+                    if (json.goodP > json.badP) {
+                        $("#result").html("<h3>是好瓜的概率为:"+json.goodP+"</h3>" +
+                            "<h3>是坏瓜的概率为"+json.badP+"</h3>" +
+                            "<h3>P(好瓜)>P(坏瓜),所以是好瓜</h3>");
+                    } else {
+                        $("#result").html("<h3>是好瓜的概率为:"+json.goodP+"</h3>" +
+                            "<h3>是坏瓜的概率为"+json.badP+"</h3>" +
+                            "<h3>P(好瓜)<P(坏瓜), 所以是坏瓜</h3>");
+                    }
+                }else{
+                    swal({
+                        type: 'warning',
+                        html: "<h2>" +"失败" +json.message + "</h2>",
+                        confirmButtonText: "确定"
+                    });
+                }
+            },"json");
+            return false;
+        });
+
+    }
+
+    $(function(){
+        $.ajax({
+            "url" : "/fileUpload",
+            "type" : "get",
+            "data" : {"type":"q","expid":"exp1"},
+            dataType : "json",
+            "success" : function(json){
+                if (json.data == "y") {
+                    $("#upmsg").val("上传成功!");
+                }
+            },
+            "error" : function(xmlhttp, errorText){
+                console.log(xmlhttp);
+                console.log(errorText); //xmlhttp中的statusText
+                if(xmlhttp.status == 405){
+                    alert("无效请求方式");
+                }else if(xmlhttp.status == 404){
+                    alert("未找到URL资源");
+                }else if(xmlhttp.status == 500){
+                    alert("服务器内部错误, 请联系管理员");
+                }else{
+                    alert("产生异常, 请联系管理员");
+                }
+            }
+        });
+    });
+
+    submitData()
+    fileUpload()
+</script>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all">
+    <script src="/resources/echarts.js"></script>
+    <script src="/resources/layui/layui.js"></script>
+    <script src="/resources/jquery-3.6.0.js"></script>
+    <script src="/resources/sweetalert2.all.min.js"></script>
+    <style>
+        #pic{
+            margin: 0 auto;
+            width: 96%;
+            height: 500px;
+        }
+    </style>
+    <title>实验三</title>
+</head>
+<body>
+<div id="ipt">
+    <div style="margin-bottom: 40px">
+        <button id="file-upload" class="layui-btn" lay-data="{url: '/fileUpload', accept: 'file'} ">上传文件</button>
+        <input type="text" id="upmsg" value="" style=" border: 0px; margin-left: 30px; margin-bottom: 40px; font-size: 18px" readonly="readonly">
+    </div>
+
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">delta</label>
+            <div class="layui-input-block layui-col-space5">
+                <input type="text" name="delta" lay-verify="required" lay-filter="delta" value="0.01">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">中心点</label>
+            <div class="layui-input-block">
+                <textarea name="centers" placeholder="请输入中心点, 一行一个, 以逗号分隔" class="layui-textarea">27,6,232.61
+3,5,1507.11
+4,16,817.62</textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block layui-col-space5">
+                <input type="hidden" name="expid" lay-verify="required" lay-filter="expid" value="exp3">
+            </div>
+        </div>
+        <!--提交按钮-->
+        <div class="layui-form-item " style="text-align: center">
+            <button class="layui-btn" type="button" lay-submit lay-filter="sub">提交</button>
+        </div>
+    </form>
+</div>
+<div id="pic-info">
+</div>
+<!--echarts 画图 需要给div指定高度宽度-->
+    <div id="pic">
+    </div>
+    <div id="result" style="margin: 0 auto;width: 80%;text-align:center;">
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    function drawPic(jcx, jcy){
+        var chartDom = document.getElementById('pic');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        option = {
+            xAxis: {
+                type: 'category',
+                data: jcx
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    data: jcy,
+                    type: 'line',
+                    smooth: true
+                }
+            ]
+        };
+
+        option && myChart.setOption(option);
+    }
+
+    function fileUpload() {
+        layui.use('upload', function(){
+            var upload = layui.upload;
+            //执行实例
+            upload.render({
+                elem: '#file-upload',
+                url: '/fileUpload', //必填项
+                method: 'post',  //可选项。HTTP类型，默认post
+                data: {"expid": "exp3"}, //可选项。额外的参数，如：{id: 123, abc: 'xxx'}
+                done: function(res){
+                    //上传完毕回调
+                    if (res.code == 0) {
+                        $("#upmsg").val("上传成功!")
+                        console.log(typeof(res.code))
+                    }
+                },
+                error: function(){
+                    //请求异常回调
+                }
+            });
+        });
+    }
+
+    function submitData() {
+        var layForm = layui.form; //layui表单对象
+        var $ = layui.$; //jQuery对象
+
+        //表单提交事件
+        layForm.on('submit(sub)', function(data){
+            console.info("向服务器提交的表单数据",data.field);
+            $.get("/ExpServlet",data.field,function (json) {
+                console.log("返回json:\n"+json)
+                if(json.code == 0){
+                    /*SweetAlert2确定对话框*/
+                    $("#ipt").css("display", "none")
+                    swal({
+                        type: 'success',
+                        html: "<h2>提交成功</h2>",
+                        confirmButtonText: "确定"
+                    }).then(function () {
+                    });
+                    console.log("返回数据:\n"+json.data.iterInfo)
+                    var htmlstr = "<table class=\"layui-table\">\n" +
+                        "<colgroup>\n" +
+                        "<col width=\"150\">\n" +
+                        "<col width=\"200\">\n" +
+                        "<col>\n" +
+                        "</colgroup>\n" +
+                        "<thead>\n" +
+                        "<tr>\n" +
+                        "<th>迭代次数</th>\n" +
+                        "<th>中心编号</th>\n" +
+                        "<th>最近一次消费时间间隔R</th>\n" +
+                        "<th>消费频率F</th>\n" +
+                        "<th>消费总金额M</th>\n" +
+                        "</tr>\n" +
+                        "</thead>\n" +
+                        "<tbody>"
+                    var len = json.data.iterInfo[1][0].length
+                    console.log("iterInfo 中心点数:" + len)
+                    for (k in json.data.iterInfo) {
+                        for (idx in json.data.iterInfo[k]) {
+                            htmlstr += "<tr>"
+                            if(idx == 0 ){
+                                htmlstr += "<td rowspan=\"" + len + "\">" + k + "</td>"
+                            }
+                            htmlstr += "<td>" + (Number(idx) + 1) + "</td>"
+                            for (id in json.data.iterInfo[k][idx]) {
+                                htmlstr += "<td>" + json.data.iterInfo[k][idx][id] + "</td>"
+                            }
+                            htmlstr += "</tr>"
+                        }
+                    }
+
+                    htmlstr += "</tbody></table>";
+                    $("#result").html(htmlstr)
+                    $("#pic-info").html("<label class=\"layui-logo\">折线图<br>横坐标为聚类次数, 纵坐标为 |此次Jc-上次Jc|</label>")
+                    drawPic(json.data.jcx, json.data.jcy)
+                }else{
+                    swal({
+                        type: 'warning',
+                        html: "<h2>" +"失败" +json.message + "</h2>",
+                        confirmButtonText: "确定"
+                    });
+                }
+            },"json");
+            return false;
+        });
+
+    }
+
+    $(function(){
+        $.ajax({
+            "url" : "/fileUpload",
+            "type" : "get",
+            "data" : {"type":"q", "expid": "exp3"},
+            dataType : "json",
+            "success" : function(json){
+                if (json.data == "y") {
+                    $("#upmsg").val("上传成功!");
+                }
+            },
+            "error" : function(xmlhttp, errorText){
+                console.log(xmlhttp);
+                console.log(errorText); //xmlhttp中的statusText
+                if(xmlhttp.status == 405){
+                    alert("无效请求方式");
+                }else if(xmlhttp.status == 404){
+                    alert("未找到URL资源");
+                }else if(xmlhttp.status == 500){
+                    alert("服务器内部错误, 请联系管理员");
+                }else{
+                    alert("产生异常, 请联系管理员");
+                }
+            }
+        });
+    });
+
+    submitData()
+    fileUpload()
+</script>

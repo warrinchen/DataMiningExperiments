@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据挖掘实验展示</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css">
+    <script src="/resources/layui/layui.js"></script>
+</head>
+
+<body class="layui-layout-body">
+<!-- Layui后台布局CSS -->
+<div class="layui-layout layui-layout-admin">
+    <!--头部导航栏-->
+    <div class="layui-header">
+        <!--系统标题-->
+        <div class="layui-logo" style="width: 100%; font-size:24px">数据挖掘实验展示</div>
+    </div>
+    <!--左侧菜单栏-->
+    <div class="layui-side layui-bg-black">
+        <!--可滚动菜单-->
+        <div class="layui-side-scroll">
+            <!--可折叠导航栏-->
+            <ul class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a href="javascript:void(0)">实验目录</a>
+                    <dl class="layui-nav-child module" data-node-id="exp"></dl>
+                </li>
+            <!--子节点-->
+            <dd class="function" data-parent-id="exp">
+                <a href="forward/exp1" target="ifmMain">实验一 分类算法</a>
+            </dd>
+            <dd class="function" data-parent-id="exp">
+                <a href="forward/exp2" target="ifmMain">实验二 Apriori算法</a>
+            </dd>
+            <dd class="function" data-parent-id="exp">
+                <a href="forward/exp3" target="ifmMain">实验三 聚类算法</a>
+            </dd>
+    </ul>
+</div>
+</div>
+<!--主体部分采用iframe嵌入其他页面-->
+<div class="layui-body" style="overflow-y: hidden">
+    <iframe name="ifmMain" src="/forward/welcome" style="border: 0px;width: 100%;height: 100%"></iframe>
+</div>
+
+</div>
+
+<script>
+    //将所有功能根据parent_id移动到指定模块下
+    layui.$(".function").each(function () {
+        var func = layui.$(this);
+        var parentId = func.data("parent-id");
+        layui.$("dl[data-node-id=" + parentId + "]").append(func);
+    })
+    //刷新折叠菜单
+    layui.element.render('nav');
+</script>
+</body>
+</html>

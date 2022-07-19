@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/resources/layui/css/layui.css" media="all">
+    <script src="/resources/echarts.js"></script>
+    <script src="/resources/layui/layui.js"></script>
+    <script src="/resources/jquery-3.6.0.js"></script>
+    <script src="/resources/sweetalert2.all.min.js"></script>
+    <style>
+        #tree1{
+            margin: 0 auto;
+            width: 96%;
+            height: 500px;
+        }
+    </style>
+    <title>实验二</title>
+</head>
+<body>
+<div id="ipt">
+    <div style="margin-bottom: 40px">
+        <button id="file-upload" class="layui-btn" lay-data="{url: '/fileUpload', accept: 'file'} ">上传文件</button>
+        <input type="text" id="upmsg" value="" style=" border: 0px; margin-left: 30px; margin-bottom: 40px; font-size: 18px" readonly="readonly">
+    </div>
+
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">最小支持度</label>
+            <div class="layui-input-block layui-col-space5">
+                <input type="text" name="min_sup" lay-verify="required" lay-filter="min_sup" value="0.3">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">最小置信度</label>
+            <div class="layui-input-block layui-col-space5">
+                <input type="text" name="min_conf" lay-verify="required" lay-filter="min_conf" value="0.5">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block layui-col-space5">
+                <input type="hidden" name="expid" lay-verify="required" lay-filter="expid" value="exp2">
+            </div>
+        </div>
+        <!--提交按钮-->
+        <div class="layui-form-item " style="text-align: center">
+            <button class="layui-btn" type="button" lay-submit lay-filter="sub">提交</button>
+        </div>
+    </form>
+</div>
+<!--echarts 画图 需要给div指定高度宽度-->
+    <div id="tree1">
+    </div>
+<!--    <div id="tree2">-->
+<!--    </div>-->
+    <div id="freqList" style="margin: 0 auto;width: 80%;text-align:center;">
+    </div>
+    <div id="rule" style="margin: 0 auto;width: 80%;text-align:center;">
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    var jsong = {"data":1};
+    function drawTree1(json, id){
+        console.log("draw treee 1 !!")
+
+        var chartDom = document.getElementById(id);
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        // myChart.showLoading();
+        // myChart.hideLoading();
+
+        // data.children.forEach(function (datum, index) {
+        //   // 利用短路与, 编号从0起, 为2 就收起,  false 不收起子节点
+        //   index % 2 === 0 && (datum.collapsed = true);
+        // });
+        myChart.setOption(
+            (option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                series: [
+                    {
+                        type: 'tree',
+                        data: [json],
+                        top: '1%',
+                        left: '10%',
+                        bottom: '1%',
+                        right: '10%',
+                        symbolSize: 7,
+                        // edgeForkPosition: '63%',
+                        initialTreeDepth: 4, // 子节点层数
+                        label: {
+                            position: 'left',
+                            verticalAlign: 'middle',
+                            align: 'right',
+                            fontSize: 9
+                        },
+                        leaves: {
+                            label: {
+                                position: 'right',
+                                verticalAlign: 'middle',
+                                align: 'left'
+                            }
+                        },
+                        emphasis: {
+                            focus: 'descendant'
+                        },
+                        expandAndCollapse: true,
+                        animationDuration: 550,
+                        animationDurationUpdate: 750
+                    }
+                ]
+            })
+        );
+
+        option && myChart.setOption(option);
+    }
+
+    function fileUpload() {
+        layui.use('upload', function(){
+            var upload = layui.upload;
+            //执行实例
+            upload.render({
+                elem: '#file-upload',
+                url: '/fileUpload', //必填项
+                method: 'post',  //可选项。HTTP类型，默认post
+                data: {"expid": "exp2"}, //可选项。额外的参数，如：{id: 123, abc: 'xxx'}
+                done: function(res){
+                    //上传完毕回调
+                    if (res.code == 0) {
+                        $("#upmsg").val("上传成功!")
+                        console.log(typeof(res.code))
+                    }
+
+                },
+                error: function(){
+                    //请求异常回调
+                }
+            });
+        });
+    }
+
+    function submitData() {
+        var layForm = layui.form; //layui表单对象
+        var $ = layui.$; //jQuery对象
+
+        //表单提交事件
+        layForm.on('submit(sub)', function(data){
+            console.info("向服务器提交的表单数据",data.field);
+            $.get("/ExpServlet",data.field,function (json) {
+                console.log("返回值:\n"+json)
+                if(json.code == 0){
+                    /*SweetAlert2确定对话框*/
+                    $("#ipt").css("display", "none")
+                    swal({
+                        type: 'success',
+                        html: "<h2>提交成功</h2>",
+                        confirmButtonText: "确定"
+                    }).then(function () {
+                    });
+                    console.log("返回数据:\n"+json.data)
+                    $("#result").html(json.data)
+                    console.log("begin draw")
+                    jsong = json.data
+                    console.log(json.data)
+                    drawTree1(json.data.tree,'tree1')
+                    for (i = 1; i <= json.data.k ;i++){
+                        k = "频繁"+i.toString()+"项集"
+                        $("#freqList").append(k+
+                            "<h2>"+json.data.freqListMap[k]+"<br/>"+
+                            "</h2><br/>")
+                    }
+                    $("#rule").html("<br/><br/><h2>关联规则</h2>")
+                    console.log(json.data.strongRuleList)
+                    for (i in json.data.strongRuleList){
+                        $("#rule").append("<h2>"+
+                            json.data.strongRuleList[i]+
+                            "</h2><br/>")
+                    }
+                    console.log("end draw")
+                }else{
+                    swal({
+                        type: 'warning',
+                        html: "<h2>" +"失败" +json.message + "</h2>",
+                        confirmButtonText: "确定"
+                    });
+                }
+            },"json");
+            return false;
+        });
+
+    }
+
+    $(function(){
+        $.ajax({
+            "url" : "/fileUpload",
+            "type" : "get",
+            "data" : {"type":"q", "expid": "exp2"},
+            dataType : "json",
+            "success" : function(json){
+                if (json.data == "y") {
+                    $("#upmsg").val("上传成功!");
+                }
+            },
+            "error" : function(xmlhttp, errorText){
+                console.log(xmlhttp);
+                console.log(errorText); //xmlhttp中的statusText
+                if(xmlhttp.status == 405){
+                    alert("无效请求方式");
+                }else if(xmlhttp.status == 404){
+                    alert("未找到URL资源");
+                }else if(xmlhttp.status == 500){
+                    alert("服务器内部错误, 请联系管理员");
+                }else{
+                    alert("产生异常, 请联系管理员");
+                }
+            }
+        });
+    });
+
+    submitData()
+    fileUpload()
+</script>
